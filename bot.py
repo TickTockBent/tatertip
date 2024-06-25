@@ -60,4 +60,4 @@ async def register(ctx, wallet_address: str):
     
     await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account.")
 
-bot.run('YOUR_BOT_TOKEN_HERE')
+bot.run('MTI1NTI3MjAyMDQ3NjgyMTUzNQ.GkVw5g.7xI6KrQtdkfhP2xAdCVcU75CdrGc_4ML-WACXU')
