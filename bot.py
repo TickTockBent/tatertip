@@ -60,4 +60,17 @@ async def register(ctx, wallet_address: str):
     
     await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account.")
 
+@bot.command(name='checkregistration')
+async def check_registration(ctx):
+    user_id = str(ctx.author.id)
+    
+    async with aiosqlite.connect(DB_FILE) as db:
+        cursor = await db.execute('SELECT wallet_address FROM users WHERE user_id = ?', (user_id,))
+        result = await cursor.fetchone()
+        
+    if result:
+        await ctx.send(f"You are registered with wallet address: {result[0]}")
+    else:
+        await ctx.send("You are not registered.")
+
 bot.run('MTI1NTI3MjAyMDQ3NjgyMTUzNQ.GkVw5g.7xI6KrQtdkfhP2xAdCVcU75CdrGc_4ML-WACXU')
