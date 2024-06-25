@@ -73,41 +73,14 @@ async def add_balance(ctx, user: discord.Member, amount: float):
     
     await ctx.send(f"Added {amount} to {user.name}'s balance. New balance: {new_balance}")
 
-@bot.command(name='deductbalance')
-@commands.check(is_admin)
-async def deduct_balance(ctx, user: discord.Member, amount: float):
-    if amount <= 0:
-        await ctx.send("Amount must be positive.")
-        return
-
-    target_user_id = str(user.id)
-    
-    async with aiosqlite.connect(DB_FILE) as db:
-        # Check if the target user is registered
-        cursor = await db.execute('SELECT balance FROM users WHERE user_id = ?', (target_user_id,))
-        result = await cursor.fetchone()
-        
-        if result is None:
-            await ctx.send(f"User {user.name} is not registered.")
-            return
-        
-        current_balance = result[0]
-        new_balance = current_balance - amount
-        
-        if new_balance < 0:
-            await ctx.send(f"Insufficient balance. Current balance: {current_balance}")
-            return
-        
-        # Update the user's balance
-        await db.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
-        
-        # Log the balance deduction
-        await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
-                         ('DEDUCT_BALANCE', target_user_id, f'Deducted: {amount}, New Balance: {new_balance}'))
-        
-        await db.commit()
-    
-    await ctx.send(f"Deducted {amount} from {user.name}'s balance. New balance: {new_balance}")
+@add_balance.error
+async def add_balance_error(ctx, error):
+    if isinstance(error, commands.MemberNotFound):
+        await ctx.send("Could not find that user. Make sure you're using a proper mention or user ID.")
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send("Invalid arguments. Usage: !addbalance @user amount")
+    else:
+        await ctx.send(f"An error occurred: {str(error)}")
 
 @bot.command(name='balance')
 async def check_balance(ctx):
