@@ -16,6 +16,7 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 user_id TEXT PRIMARY KEY,
                 wallet_address TEXT NOT NULL,
+                balance REAL DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -36,6 +37,20 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await init_db()
 
+@bot.command(name='balance')
+async def check_balance(ctx):
+    user_id = str(ctx.author.id)
+    
+    async with aiosqlite.connect(DB_FILE) as db:
+        cursor = await db.execute('SELECT wallet_address, balance FROM users WHERE user_id = ?', (user_id,))
+        result = await cursor.fetchone()
+        
+    if result:
+        wallet_address, balance = result
+        await ctx.send(f"Your balance is {balance} (Wallet: {wallet_address})")
+    else:
+        await ctx.send("You are not registered. Use !register <wallet_address> to register.")
+
 @bot.command(name='register')
 async def register(ctx, wallet_address: str):
     user_id = str(ctx.author.id)
@@ -49,8 +64,8 @@ async def register(ctx, wallet_address: str):
         
         # TODO: Add wallet address validation here
         
-        # Register new user
-        await db.execute('INSERT INTO users (user_id, wallet_address) VALUES (?, ?)', (user_id, wallet_address))
+        # Register new user with initial balance of 0
+        await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, wallet_address, 0))
         
         # Log the registration action
         await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
@@ -58,7 +73,7 @@ async def register(ctx, wallet_address: str):
         
         await db.commit()
     
-    await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account.")
+    await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. Initial balance: 0")
 
 @bot.command(name='checkregistration')
 async def check_registration(ctx):
