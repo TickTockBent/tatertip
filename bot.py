@@ -8,6 +8,10 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 DB_FILE = 'user_data.db'
+ADMIN_IDS = [170855291636809728]
+
+def is_admin(ctx):
+    return ctx.author.id in ADMIN_IDS
 
 async def init_db():
     async with aiosqlite.connect(DB_FILE) as db:
@@ -36,6 +40,74 @@ async def init_db():
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await init_db()
+
+@bot.command(name='addbalance')
+@commands.check(is_admin)
+async def add_balance(ctx, user: discord.Member, amount: float):
+    if amount <= 0:
+        await ctx.send("Amount must be positive.")
+        return
+
+    target_user_id = str(user.id)
+    
+    async with aiosqlite.connect(DB_FILE) as db:
+        # Check if the target user is registered
+        cursor = await db.execute('SELECT balance FROM users WHERE user_id = ?', (target_user_id,))
+        result = await cursor.fetchone()
+        
+        if result is None:
+            await ctx.send(f"User {user.name} is not registered.")
+            return
+        
+        current_balance = result[0]
+        new_balance = current_balance + amount
+        
+        # Update the user's balance
+        await db.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
+        
+        # Log the balance addition
+        await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
+                         ('ADD_BALANCE', target_user_id, f'Added: {amount}, New Balance: {new_balance}'))
+        
+        await db.commit()
+    
+    await ctx.send(f"Added {amount} to {user.name}'s balance. New balance: {new_balance}")
+
+@bot.command(name='deductbalance')
+@commands.check(is_admin)
+async def deduct_balance(ctx, user: discord.Member, amount: float):
+    if amount <= 0:
+        await ctx.send("Amount must be positive.")
+        return
+
+    target_user_id = str(user.id)
+    
+    async with aiosqlite.connect(DB_FILE) as db:
+        # Check if the target user is registered
+        cursor = await db.execute('SELECT balance FROM users WHERE user_id = ?', (target_user_id,))
+        result = await cursor.fetchone()
+        
+        if result is None:
+            await ctx.send(f"User {user.name} is not registered.")
+            return
+        
+        current_balance = result[0]
+        new_balance = current_balance - amount
+        
+        if new_balance < 0:
+            await ctx.send(f"Insufficient balance. Current balance: {current_balance}")
+            return
+        
+        # Update the user's balance
+        await db.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
+        
+        # Log the balance deduction
+        await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
+                         ('DEDUCT_BALANCE', target_user_id, f'Deducted: {amount}, New Balance: {new_balance}'))
+        
+        await db.commit()
+    
+    await ctx.send(f"Deducted {amount} from {user.name}'s balance. New balance: {new_balance}")
 
 @bot.command(name='balance')
 async def check_balance(ctx):
@@ -73,7 +145,7 @@ async def register(ctx, wallet_address: str):
         
         await db.commit()
     
-    await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. Initial balance: 0")
+    await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. Initial balance: 0 SMH")
 
 @bot.command(name='checkregistration')
 async def check_registration(ctx):
