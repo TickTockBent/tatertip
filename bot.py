@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import aiosqlite
 import asyncio
-from config import BOT_TOKEN, ADMIN_IDS, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT
+from config import BOT_TOKEN, ADMIN_IDS, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT, BOT_USER_ID, BOT_WALLET
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -32,12 +32,27 @@ async def init_db():
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        cursor = await db.execute('SELECT * FROM users WHERE user_id = ?', (BOT_USER_ID,))
+        if not await cursor.fetchone():
+            await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', 
+                             (BOT_USER_ID, 'BOT_WALLET', 0))
         await db.commit()
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await init_db()
+
+@bot.command(name='botbalance')
+async def bot_balance(ctx):
+    async with aiosqlite.connect(DB_FILE) as db:
+        cursor = await db.execute('SELECT balance FROM users WHERE user_id = ?', (BOT_USER_ID,))
+        result = await cursor.fetchone()
+        
+    if result:
+        await ctx.send(f"The bot's current balance is {result[0]} SMH.")
+    else:
+        await ctx.send("Couldn't retrieve the bot's balance.")
 
 @bot.command(name='addbalance')
 @commands.check(is_admin)
