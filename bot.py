@@ -43,7 +43,7 @@ async def on_ready():
 
 @bot.command(name='addbalance')
 @commands.check(is_admin)
-async def add_balance(ctx, user: discord.Member, amount: float):
+async def add_balance(ctx, user: discord.User, amount: float):
     if amount <= 0:
         await ctx.send("Amount must be positive.")
         return
@@ -56,7 +56,7 @@ async def add_balance(ctx, user: discord.Member, amount: float):
         result = await cursor.fetchone()
         
         if result is None:
-            await ctx.send(f"User {user.name} is not registered.")
+            await ctx.send(f"User {user.name} (ID: {user.id}) is not registered.")
             return
         
         current_balance = result[0]
@@ -75,12 +75,14 @@ async def add_balance(ctx, user: discord.Member, amount: float):
 
 @add_balance.error
 async def add_balance_error(ctx, error):
-    if isinstance(error, commands.MemberNotFound):
-        await ctx.send("Could not find that user. Make sure you're using a proper mention or user ID.")
+    if isinstance(error, commands.UserNotFound):
+        await ctx.send("Could not find that user. Make sure you're using a proper mention, user ID, or username.")
     elif isinstance(error, commands.BadArgument):
         await ctx.send("Invalid arguments. Usage: !addbalance @user amount")
     else:
-        await ctx.send(f"An error occurred: {str(error)}")
+        await ctx.send(f"An unexpected error occurred: {str(error)}")
+        # Log the full error for debugging
+        print(f"Error in add_balance: {error}")
 
 @bot.command(name='balance')
 async def check_balance(ctx):
