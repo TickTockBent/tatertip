@@ -2,13 +2,11 @@ import discord
 from discord.ext import commands
 import aiosqlite
 import asyncio
+from config import BOT_TOKEN, ADMIN_IDS, DB_FILE
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-DB_FILE = 'user_data.db'
-ADMIN_IDS = [170855291636809728]
 
 def is_admin(ctx):
     return ctx.author.id in ADMIN_IDS
@@ -72,6 +70,43 @@ async def add_balance(ctx, user: discord.User, amount: float):
         await db.commit()
     
     await ctx.send(f"Added {amount} to {user.name}'s balance. New balance: {new_balance}")
+
+@bot.command(name='removebalance')
+@commands.check(is_admin)
+async def remove_balance(ctx, user: discord.User, amount: float):
+    if amount <= 0:
+        await ctx.send("Amount must be positive.")
+        return
+
+    target_user_id = str(user.id)
+    
+    async with aiosqlite.connect(DB_FILE) as db:
+        # Check if the target user is registered
+        cursor = await db.execute('SELECT balance FROM users WHERE user_id = ?', (target_user_id,))
+        result = await cursor.fetchone()
+        
+        if result is None:
+            await ctx.send(f"User {user.name} (ID: {user.id}) is not registered.")
+            return
+        
+        current_balance = result[0]
+        
+        if current_balance < amount:
+            await ctx.send(f"User {user.name} (ID: {user.id}) does not have enough balance to remove.")
+            return
+        
+        new_balance = current_balance - amount
+        
+        # Update the user's balance
+        await db.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
+        
+        # Log the balance removal
+        await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
+                            ('REMOVE_BALANCE', target_user_id, f'Removed: {amount}, New Balance: {new_balance}'))
+        
+        await db.commit()
+    
+    await ctx.send(f"Removed {amount} from {user.name}'s balance. New balance: {new_balance}")
 
 @add_balance.error
 async def add_balance_error(ctx, error):
