@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import aiosqlite
 import asyncio
-from config import BOT_TOKEN, ADMIN_IDS, DB_FILE
+from config import BOT_TOKEN, ADMIN_IDS, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -133,29 +133,34 @@ async def check_balance(ctx):
     else:
         await ctx.send("You are not registered. Use !register <wallet_address> to register.")
 
+# Modify the register command to handle users with existing balances
 @bot.command(name='register')
 async def register(ctx, wallet_address: str):
     user_id = str(ctx.author.id)
     
     async with aiosqlite.connect(DB_FILE) as db:
-        # Check if user is already registered
-        cursor = await db.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
-        if await cursor.fetchone():
-            await ctx.send("You are already registered!")
-            return
+        cursor = await db.execute('SELECT wallet_address, balance FROM users WHERE user_id = ?', (user_id,))
+        user_data = await cursor.fetchone()
         
-        # TODO: Add wallet address validation here
-        
-        # Register new user with initial balance of 0
-        await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, wallet_address, 0))
+        if user_data:
+            if user_data[0] != 'UNREGISTERED':
+                await ctx.send("You are already registered!")
+                return
+            else:
+                # Update the wallet address for the existing user
+                await db.execute('UPDATE users SET wallet_address = ? WHERE user_id = ?', (wallet_address, user_id))
+                await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. "
+                               f"Your current balance is {user_data[1]} SMH.")
+        else:
+            # Register new user with initial balance of 0
+            await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, wallet_address, 0))
+            await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. Initial balance: 0 SMH")
         
         # Log the registration action
         await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
                          ('REGISTER', user_id, f'Wallet: {wallet_address}'))
         
         await db.commit()
-    
-    await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. Initial balance: 0 SMH")
 
 @bot.command(name='checkregistration')
 async def check_registration(ctx):
@@ -170,4 +175,69 @@ async def check_registration(ctx):
     else:
         await ctx.send("You are not registered.")
 
-bot.run('MTI1NTI3MjAyMDQ3NjgyMTUzNQ.GkVw5g.7xI6KrQtdkfhP2xAdCVcU75CdrGc_4ML-WACXU')
+@bot.command(name='tip')
+async def tip(ctx, recipient: discord.Member, amount: float):
+    # Check if amount is valid
+    if amount < MIN_TIP_AMOUNT or amount > MAX_TIP_AMOUNT:
+        await ctx.send(f"Tip amount must be between {MIN_TIP_AMOUNT} and {MAX_TIP_AMOUNT} SMH.")
+        return
+
+    # Check if user is tipping themselves
+    if ctx.author.id == recipient.id:
+        await ctx.send("You can't tip yourself!")
+        return
+
+    tipper_id = str(ctx.author.id)
+    recipient_id = str(recipient.id)
+
+    async with aiosqlite.connect(DB_FILE) as db:
+        # Check if tipper is registered and has sufficient balance
+        cursor = await db.execute('SELECT balance FROM users WHERE user_id = ?', (tipper_id,))
+        tipper_balance = await cursor.fetchone()
+
+        if not tipper_balance:
+            await ctx.send("You need to register first. Use !register <wallet_address>")
+            return
+
+        if tipper_balance[0] < amount:
+            await ctx.send("Insufficient balance for this tip.")
+            return
+
+        # Check if recipient is registered
+        cursor = await db.execute('SELECT wallet_address FROM users WHERE user_id = ?', (recipient_id,))
+        recipient_data = await cursor.fetchone()
+
+        if not recipient_data:
+            # Create entry for unregistered user
+            await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', 
+                             (recipient_id, 'UNREGISTERED', 0))
+
+        # Update balances
+        new_tipper_balance = tipper_balance[0] - amount
+        await db.execute('UPDATE users SET balance = balance + ? WHERE user_id = ?', (amount, recipient_id))
+        await db.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_tipper_balance, tipper_id))
+
+        # Log the transaction
+        await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
+                         ('TIP', tipper_id, f'Tipped {amount} SMH to {recipient_id}'))
+
+        await db.commit()
+
+    # Contextual confirmation
+    if isinstance(ctx.channel, discord.DMChannel):
+        await ctx.send(f"Successfully tipped {amount} SMH to {recipient.name}!")
+    else:
+        await ctx.send(f"{ctx.author.name} tipped {amount} SMH to {recipient.name}!")
+
+    # DM the recipient
+    try:
+        if not recipient_data:
+            await recipient.send(f"You received a tip of {amount} SMH from {ctx.author.name}! "
+                                 f"Please register your wallet address using the !register command.")
+        else:
+            await recipient.send(f"You received a tip of {amount} SMH from {ctx.author.name}!")
+    except discord.Forbidden:
+        # If the bot can't DM the user, send a message in the channel
+        await ctx.send(f"Couldn't send a DM to {recipient.name}. They may have DMs disabled.")
+
+bot.run(BOT_TOKEN)
