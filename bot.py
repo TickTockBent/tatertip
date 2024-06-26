@@ -244,16 +244,19 @@ async def tip(ctx, recipient: discord.User, amount: float):
     else:
         await ctx.send(f"{ctx.author.name} tipped {amount} SMH to {recipient.name}!")
 
-    # DM the recipient
-    try:
-        if not recipient_data:
-            await recipient.send(f"You received a tip of {amount} SMH from {ctx.author.name}! "
-                                 f"Please register your wallet address using the !register command.")
-        else:
-            await recipient.send(f"You received a tip of {amount} SMH from {ctx.author.name}!")
-    except discord.Forbidden:
-        # If the bot can't DM the user, send a message in the channel
-        await ctx.send(f"Couldn't send a DM to {recipient.name}. They may have DMs disabled.")
+    # DM the recipient (only if it's not the bot)
+    if recipient_id != BOT_USER_ID:
+        try:
+            if not recipient_data:
+                await recipient.send(f"You received a tip of {amount} SMH from {ctx.author.name}! "
+                                     f"Please register your wallet address using the !register command.")
+            else:
+                await recipient.send(f"You received a tip of {amount} SMH from {ctx.author.name}!")
+        except discord.Forbidden:
+            # If the bot can't DM the user, send a message in the channel
+            await ctx.send(f"Couldn't send a DM to {recipient.name}. They may have DMs disabled.")
+    else:
+        await ctx.send(f"Thank you for your tip of {amount} SMH to the bot!")
 
 @tip.error
 async def tip_error(ctx, error):
