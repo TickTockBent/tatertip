@@ -176,7 +176,7 @@ async def check_registration(ctx):
         await ctx.send("You are not registered.")
 
 @bot.command(name='tip')
-async def tip(ctx, recipient: discord.Member, amount: float):
+async def tip(ctx, recipient: discord.User, amount: float):
     # Check if amount is valid
     if amount < MIN_TIP_AMOUNT or amount > MAX_TIP_AMOUNT:
         await ctx.send(f"Tip amount must be between {MIN_TIP_AMOUNT} and {MAX_TIP_AMOUNT} SMH.")
@@ -239,5 +239,16 @@ async def tip(ctx, recipient: discord.Member, amount: float):
     except discord.Forbidden:
         # If the bot can't DM the user, send a message in the channel
         await ctx.send(f"Couldn't send a DM to {recipient.name}. They may have DMs disabled.")
+
+@tip.error
+async def tip_error(ctx, error):
+    if isinstance(error, commands.UserNotFound):
+        await ctx.send("Could not find that user. Make sure you're using a proper mention or user ID.")
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send("Invalid arguments. Usage: !tip @user amount")
+    else:
+        await ctx.send(f"An unexpected error occurred: {str(error)}")
+        # Log the full error for debugging
+        print(f"Error in tip command: {error}")
 
 bot.run(BOT_TOKEN)
