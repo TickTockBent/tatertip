@@ -6,7 +6,7 @@ from config import BOT_TOKEN, ADMIN_IDS, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
 def is_admin(ctx):
     return ctx.author.id in ADMIN_IDS
@@ -284,5 +284,10 @@ For any issues or questions, please contact an admin.
     """.format(min_tip=MIN_TIP_AMOUNT, max_tip=MAX_TIP_AMOUNT)
 
     await ctx.send(help_text)
+
+@help_command.error
+async def help_command_error(ctx, error):
+    await ctx.send("An error occurred while displaying the help message. Please try again later or contact an admin.")
+    print(f"Error in help command: {error}")
 
 bot.run(BOT_TOKEN)
