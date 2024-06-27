@@ -177,13 +177,13 @@ async def register(ctx, wallet_address: str = None):
         if not wallet_address:
             if user_data:
                 if user_data[0] == 'UNREGISTERED':
-                    await ctx.send("Your wallet is currently unregistered. Please use !register [wallet address] to set your Spacemesh wallet address.", ephemeral=True)
+                    await ctx.send("Your wallet is currently unregistered. This can happen if you receive a tip but have not yet registered. Please use !register [wallet address] to set your Spacemesh wallet address.", ephemeral=True)
                 else:
                     await ctx.send("You are already registered. If you want to update your wallet, please provide a new wallet address.", ephemeral=True)
             else:
                 await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, 'UNREGISTERED', 0))
                 await db.commit()
-                await ctx.send("You have not registered a wallet address. This can happen if you receive a tip but have not yet registered. Please use !register [wallet address] to set your Spacemesh wallet address.", ephemeral=True)
+                await ctx.send("New user created. You have not registered a wallet address. Please use !register [wallet address] to set your Spacemesh wallet address.", ephemeral=True)
             return
 
         if not user_data:
