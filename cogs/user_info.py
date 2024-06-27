@@ -6,6 +6,7 @@ from utils.address_generator import validate_spacemesh_address
 class UserInfo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        print("User Info cog initialized")
 
     @commands.command(name='balance')
     async def check_balance(self, ctx):

@@ -6,6 +6,7 @@ from utils.address_generator import generate_spacemesh_address, validate_spaceme
 class Registration(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        print("Registration cog initialized")
 
     @commands.command(name='register')
     async def register(self, ctx, wallet_address: str = None):

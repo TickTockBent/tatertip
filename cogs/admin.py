@@ -11,6 +11,7 @@ def is_admin():
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        print("Admin cog initialized")
 
     @commands.command(name='addbalance')
     @is_admin()

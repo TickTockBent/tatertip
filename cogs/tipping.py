@@ -6,6 +6,7 @@ from utils.database import get_user_data, update_user_balance, log_action
 class Tipping(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        print("Tipping cog initialized")
 
     @commands.command(name='tip')
     async def tip(self, ctx, recipient: discord.User, amount: float):
