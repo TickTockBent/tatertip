@@ -29,6 +29,11 @@ initial_extensions = ['cogs.registration', 'cogs.tipping', 'cogs.admin', 'cogs.u
 
 if __name__ == '__main__':
     for extension in initial_extensions:
-        bot.load_extension(extension)
+        try:
+            print(f"Attempting to load extension: {extension}")
+            bot.load_extension(extension)
+            print(f"Successfully loaded extension: {extension}")
+        except Exception as e:
+            print(f"Failed to load extension {extension}: {str(e)}")
 
 bot.run(BOT_TOKEN)
