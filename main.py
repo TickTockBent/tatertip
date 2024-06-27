@@ -1,6 +1,6 @@
 import discord
 import asyncio
-import aiosqlite
+import signal
 from discord.ext import commands
 from config import BOT_TOKEN, DB_FILE
 from utils.database import init_db
