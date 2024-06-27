@@ -39,4 +39,6 @@ class Registration(commands.Cog):
         await log_action('REGISTER', user_id, f'Wallet: {wallet_address}')
 
 def setup(bot):
+    print("Attempting to add Registration cog")
     bot.add_cog(Registration(bot))
+    print("Registration cog added successfully")
