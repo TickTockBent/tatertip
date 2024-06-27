@@ -158,14 +158,25 @@ async def check_balance(ctx):
     user_id = str(ctx.author.id)
     
     async with aiosqlite.connect(DB_FILE) as db:
-        cursor = await db.execute('SELECT wallet_address, balance FROM users WHERE user_id = ?', (user_id,))
+        cursor = await db.execute('SELECT wallet_address, balance, deposit_address FROM users WHERE user_id = ?', (user_id,))
         result = await cursor.fetchone()
         
     if result:
-        wallet_address, balance = result
-        await ctx.send(f"Your balance is {balance} (Wallet: {wallet_address})")
+        wallet_address, balance, deposit_address = result
+        
+        balance_message = f"Your balance is {balance} SMH"
+        wallet_message = f"Wallet: {wallet_address}"
+        
+        if wallet_address == 'UNREGISTERED':
+            wallet_message += "\nPlease use !register <wallet_address> to set your withdrawal wallet."
+        
+        deposit_message = f"To add funds, send SMH to this deposit address:\n{deposit_address}"
+        
+        full_message = f"{balance_message}\n\n{wallet_message}\n\n{deposit_message}"
+        
+        await ctx.send(full_message, ephemeral=True)
     else:
-        await ctx.send("You are not registered. Use !register <wallet_address> to register.")
+        await ctx.send("You are not registered. Use !register <wallet_address> to register.", ephemeral=True)
 
 @bot.command(name='register')
 async def register(ctx, wallet_address: str = None):
