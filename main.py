@@ -1,7 +1,8 @@
 import discord
 import asyncio
+import aiosqlite
 from discord.ext import commands
-from config import BOT_TOKEN
+from config import BOT_TOKEN, DB_FILE
 from utils.database import init_db
 
 intents = discord.Intents.default()
@@ -14,6 +15,7 @@ async def on_ready():
     print(f'Bot is in {len(bot.guilds)} guilds')
     print(f'Command prefix is: {bot.command_prefix}')
     await init_db()
+    bot.pool = await aiosqlite.create_pool(DB_FILE)
 
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
@@ -43,3 +45,8 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+
+@bot.event
+async def on_shutdown():
+    if hasattr(bot, 'pool'):
+        await bot.pool.close()
