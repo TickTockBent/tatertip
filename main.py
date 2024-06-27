@@ -9,18 +9,12 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
-async def get_db_pool():
-    if not hasattr(bot, 'pool'):
-        bot.pool = await aiosqlite.create_pool(DB_FILE)
-    return bot.pool
-
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     print(f'Bot is in {len(bot.guilds)} guilds')
     print(f'Command prefix is: {bot.command_prefix}')
     await init_db()
-    await get_db_pool()
 
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
@@ -47,13 +41,7 @@ async def load_extensions():
 async def main():
     await load_extensions()
     async with bot:
-        await get_db_pool()  # Create pool before starting the bot
         await bot.start(BOT_TOKEN)
 
 if __name__ == '__main__':
     asyncio.run(main())
-
-@bot.event
-async def on_shutdown():
-    if hasattr(bot, 'pool'):
-        await bot.pool.close()
