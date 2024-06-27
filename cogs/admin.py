@@ -24,20 +24,26 @@ class Admin(commands.Cog):
         target_user_id = str(user.id)
         
         async with await get_db_connection() as conn:
-            user_data = await get_user_data(target_user_id)
-            
-            if user_data is None:
-                await ctx.send(f"User {user.name} (ID: {user.id}) is not registered.")
-                return
-            
-            current_balance = user_data[3]  # Assuming balance is at index 3
-            new_balance = current_balance + amount
-            
-            # Update the user's balance
-            await conn.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
-            
-            # Log the balance addition
-            await log_action('ADD_BALANCE', target_user_id, f'Added: {amount}, New Balance: {new_balance}')
+            async with conn.cursor() as cur:
+                # Get user data
+                await cur.execute('SELECT * FROM users WHERE user_id = ?', (target_user_id,))
+                user_data = await cur.fetchone()
+                
+                if user_data is None:
+                    await ctx.send(f"User {user.name} (ID: {user.id}) is not registered.")
+                    return
+                
+                current_balance = user_data[3]  # Assuming balance is at index 3
+                new_balance = current_balance + amount
+                
+                # Update the user's balance
+                await cur.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
+                
+                # Log the balance addition
+                await cur.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
+                                ('ADD_BALANCE', target_user_id, f'Added: {amount}, New Balance: {new_balance}'))
+                
+                await conn.commit()
         
         await ctx.send(f"Added {amount} to {user.name}'s balance. New balance: {new_balance}")
 
