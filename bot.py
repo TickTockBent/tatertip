@@ -19,6 +19,7 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 user_id TEXT PRIMARY KEY,
                 wallet_address TEXT NOT NULL,
+                deposit_address TEXT,
                 balance REAL DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -169,9 +170,10 @@ async def check_balance(ctx):
 @bot.command(name='register')
 async def register(ctx, wallet_address: str = None):
     user_id = str(ctx.author.id)
+    dummy_deposit_address = 'DUMMY_DEPOSIT_ADDRESS'  # We'll replace this with a real address generation later
     
     async with aiosqlite.connect(DB_FILE) as db:
-        cursor = await db.execute('SELECT wallet_address FROM users WHERE user_id = ?', (user_id,))
+        cursor = await db.execute('SELECT wallet_address, deposit_address FROM users WHERE user_id = ?', (user_id,))
         user_data = await cursor.fetchone()
         
         if not wallet_address:
@@ -181,14 +183,16 @@ async def register(ctx, wallet_address: str = None):
                 else:
                     await ctx.send("You are already registered. If you want to update your wallet, please provide a new wallet address.", ephemeral=True)
             else:
-                await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, 'UNREGISTERED', 0))
+                await db.execute('INSERT INTO users (user_id, wallet_address, deposit_address, balance) VALUES (?, ?, ?, ?)', 
+                                 (user_id, 'UNREGISTERED', dummy_deposit_address, 0))
                 await db.commit()
-                await ctx.send("New user created. You have not registered a wallet address. Please use !register [wallet address] to set your Spacemesh wallet address.", ephemeral=True)
+                await ctx.send("You've been registered with an unregistered wallet. Please use !register [wallet address] to set your Spacemesh wallet address.", ephemeral=True)
             return
 
         if not user_data:
             # New user registering with a wallet address
-            await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, wallet_address, 0))
+            await db.execute('INSERT INTO users (user_id, wallet_address, deposit_address, balance) VALUES (?, ?, ?, ?)', 
+                             (user_id, wallet_address, dummy_deposit_address, 0))
             await db.commit()
             await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account.", ephemeral=True)
         elif user_data[0] == 'UNREGISTERED':
@@ -222,6 +226,13 @@ async def register(ctx, wallet_address: str = None):
                          ('REGISTER', user_id, f'Wallet: {wallet_address}'))
         
         await db.commit()
+
+    # Fetch and display the deposit address
+    async with aiosqlite.connect(DB_FILE) as db:
+        cursor = await db.execute('SELECT deposit_address FROM users WHERE user_id = ?', (user_id,))
+        result = await cursor.fetchone()
+        if result:
+            await ctx.send(f"Your deposit address is: {result[0]}", ephemeral=True)
 
 @bot.command(name='checkregistration')
 async def check_registration(ctx):
