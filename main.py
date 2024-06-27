@@ -38,7 +38,28 @@ async def load_extensions():
         except Exception as e:
             print(f"Failed to load extension {extension}: {str(e)}")
 
+async def shutdown(signal, loop):
+    print(f"Received exit signal {signal.name}...")
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    await asyncio.gather(*tasks, return_exceptions=True)
+    loop.stop()
+
+def handle_exception(loop, context):
+    msg = context.get("exception", context["message"])
+    print(f"Caught exception: {msg}")
+    asyncio.create_task(shutdown(signal.SIGINT, loop))
+
 async def main():
+    loop = asyncio.get_running_loop()
+    signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
+    for s in signals:
+        loop.add_signal_handler(
+            s, lambda s=s: asyncio.create_task(shutdown(s, loop))
+        )
+    
+    loop.set_exception_handler(handle_exception)
+    
     await load_extensions()
     async with bot:
         await bot.start(BOT_TOKEN)
