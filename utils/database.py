@@ -44,3 +44,15 @@ async def log_action(action, user_id, details):
         await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
                          (action, user_id, details))
         await db.commit()
+
+async def update_user_balance(user_id, amount, wallet=''):
+    async with aiosqlite.connect(DB_FILE) as db:
+        if wallet:
+            await db.execute('''
+                INSERT INTO users (user_id, wallet_address, balance) 
+                VALUES (?, ?, ?) 
+                ON CONFLICT(user_id) DO UPDATE SET balance = balance + ?
+            ''', (user_id, wallet, amount, amount))
+        else:
+            await db.execute('UPDATE users SET balance = balance + ? WHERE user_id = ?', (amount, user_id))
+        await db.commit()
