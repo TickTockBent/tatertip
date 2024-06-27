@@ -74,7 +74,7 @@ class Admin(commands.Cog):
 
     @commands.command(name='botbalance')
     @is_admin()
-    async def bot_balance(self, ctx):
+    async def check_bot_balance(self, ctx):
         async with ctx.bot.pool.acquire() as conn:
             cursor = await conn.execute('SELECT balance FROM users WHERE user_id = ?', (BOT_USER_ID,))
             result = await cursor.fetchone()
