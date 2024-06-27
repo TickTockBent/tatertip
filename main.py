@@ -1,4 +1,5 @@
 import discord
+import asyncio
 from discord.ext import commands
 from config import BOT_TOKEN
 from utils.database import init_db
@@ -27,13 +28,18 @@ async def ping(ctx):
 # Load cogs
 initial_extensions = ['cogs.registration', 'cogs.tipping', 'cogs.admin', 'cogs.user_info']
 
-if __name__ == '__main__':
+async def load_extensions():
     for extension in initial_extensions:
         try:
             print(f"Attempting to load extension: {extension}")
-            bot.load_extension(extension)
+            await bot.load_extension(extension)
             print(f"Successfully loaded extension: {extension}")
         except Exception as e:
             print(f"Failed to load extension {extension}: {str(e)}")
 
-bot.run(BOT_TOKEN)
+async def main():
+    await load_extensions()
+    await bot.start(BOT_TOKEN)
+
+if __name__ == '__main__':
+    asyncio.run(main())
