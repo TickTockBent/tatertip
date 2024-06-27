@@ -197,10 +197,20 @@ async def register(ctx, wallet_address: str = None):
             # Existing user with a registered wallet
             old_wallet = user_data[0]
             if old_wallet != wallet_address:
+                view = ConfirmView()
                 await ctx.send(f"You're already registered with wallet: {old_wallet}\n"
-                               f"To update to the new wallet: {wallet_address}, please confirm.",
-                               ephemeral=True)
-                # Confirmation logic will be added in the next step
+                               f"Do you want to update to the new wallet: {wallet_address}?",
+                               view=view, ephemeral=True)
+                await view.wait()
+                
+                if view.value:
+                    await db.execute('UPDATE users SET wallet_address = ? WHERE user_id = ?', (wallet_address, user_id))
+                    await db.commit()
+                    await ctx.send("Your wallet has been updated successfully!", ephemeral=True)
+                elif view.value is False:
+                    await ctx.send("Wallet update cancelled. Your current wallet remains unchanged.", ephemeral=True)
+                else:
+                    await ctx.send("The confirmation timed out. Please try again.", ephemeral=True)
             else:
                 await ctx.send(f"You're already registered with this wallet: {old_wallet}", ephemeral=True)
 
