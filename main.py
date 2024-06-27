@@ -12,6 +12,12 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await init_db()
 
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        print(f"Command not found: {ctx.message.content}")
+    else:
+        print(f"An error occurred: {str(error)}")
+
 # Load cogs
 initial_extensions = ['cogs.registration', 'cogs.tipping', 'cogs.admin', 'cogs.user_info']
 
