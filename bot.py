@@ -148,29 +148,44 @@ async def check_balance(ctx):
     else:
         await ctx.send("You are not registered. Use !register <wallet_address> to register.")
 
-# Modify the register command to handle users with existing balances
 @bot.command(name='register')
-async def register(ctx, wallet_address: str):
+async def register(ctx, wallet_address: str = None):
     user_id = str(ctx.author.id)
     
     async with aiosqlite.connect(DB_FILE) as db:
-        cursor = await db.execute('SELECT wallet_address, balance FROM users WHERE user_id = ?', (user_id,))
+        cursor = await db.execute('SELECT wallet_address FROM users WHERE user_id = ?', (user_id,))
         user_data = await cursor.fetchone()
         
-        if user_data:
-            if user_data[0] != 'UNREGISTERED':
-                await ctx.send("You are already registered!")
-                return
+        if not wallet_address:
+            if user_data:
+                await ctx.send("You are already registered. If you want to update your wallet, please provide a new wallet address.", ephemeral=True)
             else:
-                # Update the wallet address for the existing user
-                await db.execute('UPDATE users SET wallet_address = ? WHERE user_id = ?', (wallet_address, user_id))
-                await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. "
-                               f"Your current balance is {user_data[1]} SMH.")
-        else:
-            # Register new user with initial balance of 0
+                await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, 'UNREGISTERED', 0))
+                await db.commit()
+                await ctx.send("You've been registered with an unregistered wallet. Please use !register <wallet_address> to set your wallet.", ephemeral=True)
+            return
+
+        if not user_data:
+            # New user registering with a wallet address
             await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', (user_id, wallet_address, 0))
-            await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account. Initial balance: 0 SMH")
-        
+            await db.commit()
+            await ctx.send(f"Registration successful! Your wallet {wallet_address} has been linked to your account.", ephemeral=True)
+        elif user_data[0] == 'UNREGISTERED':
+            # Existing user with 'UNREGISTERED' wallet setting their wallet address
+            await db.execute('UPDATE users SET wallet_address = ? WHERE user_id = ?', (wallet_address, user_id))
+            await db.commit()
+            await ctx.send(f"Your wallet has been updated to: {wallet_address}", ephemeral=True)
+        else:
+            # Existing user with a registered wallet
+            old_wallet = user_data[0]
+            if old_wallet != wallet_address:
+                await ctx.send(f"You're already registered with wallet: {old_wallet}\n"
+                               f"To update to the new wallet: {wallet_address}, please confirm.",
+                               ephemeral=True)
+                # Confirmation logic will be added in the next step
+            else:
+                await ctx.send(f"You're already registered with this wallet: {old_wallet}", ephemeral=True)
+
         # Log the registration action
         await db.execute('INSERT INTO audit_log (action, user_id, details) VALUES (?, ?, ?)', 
                          ('REGISTER', user_id, f'Wallet: {wallet_address}'))
