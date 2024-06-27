@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import ui
 import aiosqlite
 import asyncio
 from config import BOT_TOKEN, ADMIN_IDS, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT, BOT_USER_ID, BOT_WALLET
@@ -37,6 +38,23 @@ async def init_db():
             await db.execute('INSERT INTO users (user_id, wallet_address, balance) VALUES (?, ?, ?)', 
                              (BOT_USER_ID, 'BOT_WALLET', 0))
         await db.commit()
+
+class ConfirmView(ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)  # 60 seconds timeout
+        self.value = None
+
+    @ui.button(label="Confirm", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: ui.Button):
+        self.value = True
+        self.stop()
+        await interaction.response.send_message("Wallet update confirmed!", ephemeral=True)
+
+    @ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button: ui.Button):
+        self.value = False
+        self.stop()
+        await interaction.response.send_message("Wallet update cancelled.", ephemeral=True)
 
 @bot.event
 async def on_ready():
