@@ -81,5 +81,5 @@ class UserInfo(commands.Cog):
 
 async def setup(bot):
     print("Attempting to add User_Info cog")
-    bot.add_cog(UserInfo(bot))
+    await bot.add_cog(UserInfo(bot))
     print("User_Info cog added successfully")

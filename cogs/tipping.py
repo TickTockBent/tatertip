@@ -87,5 +87,5 @@ class Tipping(commands.Cog):
 
 async def setup(bot):
     print("Attempting to add Tipping cog")
-    bot.add_cog(Tipping(bot))
+    await bot.add_cog(Tipping(bot))
     print("Tipping cog added successfully")

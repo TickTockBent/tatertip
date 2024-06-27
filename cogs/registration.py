@@ -41,5 +41,5 @@ class Registration(commands.Cog):
 
 async def setup(bot):
     print("Attempting to add Registration cog")
-    bot.add_cog(Registration(bot))
+    await bot.add_cog(Registration(bot))
     print("Registration cog added successfully")
