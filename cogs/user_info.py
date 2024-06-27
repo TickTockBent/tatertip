@@ -79,5 +79,7 @@ class UserInfo(commands.Cog):
         await ctx.send("An error occurred while displaying the help message. Please try again later or contact an admin.")
         print(f"Error in help command: {error}")
 
-def setup(bot):
+async def setup(bot):
+    print("Attempting to add User_Info cog")
     bot.add_cog(UserInfo(bot))
+    print("User_Info cog added successfully")

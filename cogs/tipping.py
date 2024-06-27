@@ -85,5 +85,7 @@ class Tipping(commands.Cog):
             # Log the full error for debugging
             print(f"Error in tip command: {error}")
 
-def setup(bot):
+async def setup(bot):
+    print("Attempting to add Tipping cog")
     bot.add_cog(Tipping(bot))
+    print("Tipping cog added successfully")

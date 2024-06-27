@@ -96,5 +96,7 @@ class Admin(commands.Cog):
             # Log the full error for debugging
             print(f"Error in balance command: {error}")
 
-def setup(bot):
+async def setup(bot):
+    print("Attempting to add Admin cog")
     bot.add_cog(Admin(bot))
+    print("Admin cog added successfully")
