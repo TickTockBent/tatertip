@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from config import MIN_TIP_AMOUNT, MAX_TIP_AMOUNT, BOT_USER_ID
+from utils.db_utils import get_db_connection
 from utils.database import get_user_data, update_user_balance, log_action
 
 class Tipping(commands.Cog):

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from config import ADMIN_IDS, BOT_USER_ID
 from utils.database import get_user_data, log_action
-from main import get_db_connection
+from utils.db_utils import get_db_connection
 
 def is_admin():
     async def predicate(ctx):

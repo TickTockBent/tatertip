@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from utils.db_utils import get_db_connection
 from utils.database import get_user_data, update_user_wallet, insert_new_user, log_action
 from utils.address_generator import generate_spacemesh_address, validate_spacemesh_address
 
