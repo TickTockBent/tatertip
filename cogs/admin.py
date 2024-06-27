@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from config import ADMIN_IDS, BOT_USER_ID
 from utils.database import get_user_data, log_action
+from main import get_db_pool
 
 def is_admin():
     async def predicate(ctx):
@@ -22,7 +23,8 @@ class Admin(commands.Cog):
 
         target_user_id = str(user.id)
         
-        async with ctx.bot.pool.acquire() as conn:
+        pythonCopypool = await get_db_pool()
+        async with pool.acquire() as conn:
             user_data = await get_user_data(target_user_id)
             
             if user_data is None:
@@ -49,7 +51,8 @@ class Admin(commands.Cog):
 
         target_user_id = str(user.id)
         
-        async with ctx.bot.pool.acquire() as conn:
+        pythonCopypool = await get_db_pool()
+        async with pool.acquire() as conn:
             user_data = await get_user_data(target_user_id)
             
             if user_data is None:
@@ -75,7 +78,8 @@ class Admin(commands.Cog):
     @commands.command(name='botbalance')
     @is_admin()
     async def check_bot_balance(self, ctx):
-        async with ctx.bot.pool.acquire() as conn:
+        pythonCopypool = await get_db_pool()
+        async with pool.acquire() as conn:
             cursor = await conn.execute('SELECT balance FROM users WHERE user_id = ?', (BOT_USER_ID,))
             result = await cursor.fetchone()
             
