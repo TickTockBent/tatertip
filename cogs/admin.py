@@ -145,7 +145,7 @@ class Admin(commands.Cog):
             await ctx.send(f"Error generating address: {str(e)}")
 
     def blake3_hash(self, data):
-        return hashlib.blake3(data).digest()
+        return blake3.blake3(data).digest()
 
     def compute_address(self, public_key):
         template = b'\x00' * 23 + b'\x01'

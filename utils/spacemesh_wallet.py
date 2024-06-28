@@ -1,9 +1,10 @@
 import hashlib
 import binascii
+import blake3
 from bech32 import bech32_encode, convertbits
 
-def blake3_hash(data):
-    return hashlib.blake3(data).digest()
+def blake3_hash(self, data):
+    return blake3.blake3(data).digest()
 
 def compute_address(public_key):
     # Wallet template address
