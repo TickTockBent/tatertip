@@ -2,12 +2,14 @@ import discord
 import asyncio
 import signal
 from discord.ext import commands
-from config import BOT_TOKEN, DB_FILE
+from config import BOT_TOKEN, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT
 from utils.database import init_db
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
+bot.min_tip = MIN_TIP_AMOUNT
+bot.max_tip = MAX_TIP_AMOUNT
 
 @bot.event
 async def on_ready():
