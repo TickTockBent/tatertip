@@ -41,9 +41,12 @@ async def load_extensions():
 async def shutdown(signal, loop):
     print(f"Received exit signal {signal.name}...")
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    [task.cancel() for task in tasks]
     
     print("Cancelling outstanding tasks")
+    for task in tasks:
+        task.cancel()
+    
+    print("Waiting for tasks to complete")
     await asyncio.gather(*tasks, return_exceptions=True)
     
     print("Stopping the event loop")
@@ -61,14 +64,19 @@ async def main():
     signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
     for s in signals:
         loop.add_signal_handler(
-            s, lambda s=s: asyncio.create_task(asyncio.shield(shutdown(s, loop)))
+            s, lambda s=s: asyncio.create_task(shutdown(s, loop))
         )
     
     loop.set_exception_handler(handle_exception)
     
     await load_extensions()
-    async with bot:
+    try:
         await bot.start(BOT_TOKEN)
+    except asyncio.CancelledError:
+        print("Bot has been cancelled")
+    finally:
+        await bot.close()
+        print("Bot has been closed")
 
 if __name__ == '__main__':
     asyncio.run(main())
