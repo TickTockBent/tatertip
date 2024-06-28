@@ -17,6 +17,10 @@ class Admin(commands.Cog):
     @commands.command(name='addbalance')
     @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
     async def add_balance(self, ctx, user: discord.User, amount: float):
+        if amount <= 0:
+            await ctx.send("Amount must be a positive number.")
+            return
+        
         user_id = str(user.id)
         user_data = await get_user_data(user_id)
 
@@ -44,6 +48,10 @@ class Admin(commands.Cog):
     @commands.command(name='removebalance')
     @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
     async def remove_balance(self, ctx, user: discord.User, amount: float):
+        if amount <= 0:
+            await ctx.send("Amount must be a positive number.")
+            return
+        
         user_id = str(user.id)
         user_data = await get_user_data(user_id)
 
@@ -71,6 +79,10 @@ class Admin(commands.Cog):
     @commands.command(name='setbalance')
     @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
     async def set_balance(self, ctx, user: discord.User, amount: float):
+        if amount <= 0:
+            await ctx.send("Amount must be a positive number.")
+            return
+        
         user_id = str(user.id)
         user_data = await get_user_data(user_id)
 
