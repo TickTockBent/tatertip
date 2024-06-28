@@ -130,6 +130,43 @@ class Admin(commands.Cog):
         else:
             await ctx.send(f"An error occurred: {str(error)}")
             print(f"Error in get_balance command: {error}")
+    
+    @commands.command(name='generate_address')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
+    async def generate_address(self, ctx, public_key: str):
+        try:
+            address = self.spawn_wallet_address(public_key)
+            await ctx.send(f"Generated address:\nRaw: {address['raw_address']}\nBech32: {address['bech32_address']}")
+        except Exception as e:
+            await ctx.send(f"Error generating address: {str(e)}")
+
+    def blake3_hash(self, data):
+        return hashlib.blake3(data).digest()
+
+    def compute_address(self, public_key):
+        template = b'\x00' * 23 + b'\x01'
+        data = template + public_key
+        hashed = self.blake3_hash(data)
+        address = b'\x00' * 4 + hashed[-20:]
+        return address
+
+    def bech32_encode_address(self, address, hrp="sm"):
+        converted = convertbits(address, 8, 5)
+        return bech32_encode(hrp, converted)
+
+    def spawn_wallet_address(self, public_key_hex):
+        public_key = binascii.unhexlify(public_key_hex)
+        
+        if len(public_key) != 32:
+            raise ValueError("Public key must be 32 bytes long")
+        
+        raw_address = self.compute_address(public_key)
+        bech32_address = self.bech32_encode_address(raw_address)
+        
+        return {
+            "raw_address": binascii.hexlify(raw_address).decode(),
+            "bech32_address": bech32_address
+        }
 
 async def setup(bot):
     print("Attempting to add Admin cog")
