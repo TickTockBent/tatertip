@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from config import ADMIN_IDS, BOT_USER_ID
-from utils.database import get_user_data, log_action
+from utils.database import get_user_data, update_user_balance, log_action
 from utils.db_utils import get_db_connection
 
 def is_admin():
@@ -15,30 +15,109 @@ class Admin(commands.Cog):
         print("Admin cog initialized")
 
     @commands.command(name='addbalance')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
     async def add_balance(self, ctx, user: discord.User, amount: float):
-        await ctx.send("Addbalance Admin Command Registered.")
-        if amount <= 0:
-            await ctx.send("Amount must be positive.")
+        user_id = str(user.id)
+        user_data = await get_user_data(user_id)
+
+        if not user_data:
+            await ctx.send(f"User {user.name} is not registered in the system.")
             return
 
-        target_user_id = str(user.id)
-        
-        async with await get_db_connection() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute('SELECT balance FROM users WHERE user_id = ?', (target_user_id,))
-                result = await cur.fetchone()
-                
-                if result is None:
-                    await ctx.send(f"User {user.name} (ID: {user.id}) is not registered.")
-                    return
-                
-                current_balance = result[0]
-                new_balance = current_balance + amount
-                
-                await cur.execute('UPDATE users SET balance = ? WHERE user_id = ?', (new_balance, target_user_id))
-                await conn.commit()
-        
-        await ctx.send(f"Added {amount} to {user.name}'s balance. New balance: {new_balance}")
+        await update_user_balance(user_id, amount)
+        await log_action('ADMIN_ADD_BALANCE', str(ctx.author.id), f'Added {amount} SMH to {user_id}')
+
+        await ctx.send(f"Successfully added {amount} SMH to {user.name}'s balance.")
+
+    @add_balance.error
+    async def add_balance_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You don't have permission to use this command.")
+        elif isinstance(error, commands.UserNotFound):
+            await ctx.send("User not found. Please provide a valid user mention or ID.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Invalid arguments. Usage: !addbalance <user> <amount>")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
+            print(f"Error in add_balance command: {error}")
+
+    @commands.command(name='removebalance')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
+    async def remove_balance(self, ctx, user: discord.User, amount: float):
+        user_id = str(user.id)
+        user_data = await get_user_data(user_id)
+
+        if not user_data:
+            await ctx.send(f"User {user.name} is not registered in the system.")
+            return
+
+        await update_user_balance(user_id, -amount)
+        await log_action('ADMIN_REMOVE_BALANCE', str(ctx.author.id), f'Removed {amount} SMH from {user_id}')
+
+        await ctx.send(f"Successfully removed {amount} SMH from {user.name}'s balance.")
+
+    @remove_balance.error
+    async def remove_balance_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You don't have permission to use this command.")
+        elif isinstance(error, commands.UserNotFound):
+            await ctx.send("User not found. Please provide a valid user mention or ID.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Invalid arguments. Usage: !removebalance <user> <amount>")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
+            print(f"Error in remove_balance command: {error}")
+
+    @commands.command(name='setbalance')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
+    async def set_balance(self, ctx, user: discord.User, amount: float):
+        user_id = str(user.id)
+        user_data = await get_user_data(user_id)
+
+        if not user_data:
+            await ctx.send(f"User {user.name} is not registered in the system.")
+            return
+
+        await update_user_balance(user_id, amount - user_data[3])
+        await log_action('ADMIN_SET_BALANCE', str(ctx.author.id), f'Set {user.name}\'s balance to {amount} SMH')
+
+        await ctx.send(f"Successfully set {user.name}'s balance to {amount} SMH.")
+
+    @set_balance.error
+    async def set_balance_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You don't have permission to use this command.")
+        elif isinstance(error, commands.UserNotFound):
+            await ctx.send("User not found. Please provide a valid user mention or ID.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Invalid arguments. Usage: !setbalance <user> <amount>")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
+            print(f"Error in set_balance command: {error}")
+
+    @commands.command(name='getbalance')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
+    async def get_balance(self, ctx, user: discord.User):
+        user_id = str(user.id)
+        user_data = await get_user_data(user_id)
+
+        if not user_data:
+            await ctx.send(f"User {user.name} is not registered in the system.")
+            return
+
+        await ctx.send(f"{user.name}'s balance is {user_data[3]} SMH.")
+
+    @get_balance.error
+    async def get_balance_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You don't have permission to use this command.")
+        elif isinstance(error, commands.UserNotFound):
+            await ctx.send("User not found. Please provide a valid user mention or ID.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Invalid arguments. Usage: !getbalance <user>")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
+            print(f"Error in get_balance command: {error}")
 
 async def setup(bot):
     print("Attempting to add Admin cog")
