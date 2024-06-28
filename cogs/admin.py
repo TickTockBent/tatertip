@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import hashlib
 import binascii
+import blake3
 from bech32 import bech32_encode, convertbits
 from config import ADMIN_IDS, BOT_USER_ID
 from utils.database import get_user_data, update_user_balance, log_action
