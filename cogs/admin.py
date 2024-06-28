@@ -15,7 +15,6 @@ class Admin(commands.Cog):
         print("Admin cog initialized")
 
     @commands.command(name='addbalance')
-    @is_admin()
     async def add_balance(self, ctx, user: discord.User, amount: float):
         await ctx.send("Addbalance Admin Command Registered.")
         if amount <= 0:
