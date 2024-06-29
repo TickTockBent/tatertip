@@ -1,12 +1,15 @@
+# address_validator.py
+
 from bech32 import bech32_decode, convertbits
+from config import NETWORK_CONFIG
 
 def validate_spacemesh_address(address):
     """Validate a Spacemesh address."""
     print(f"Validating address: {address}")
     
-    # Check if the address starts with "sm1" and has the correct length
-    if not address.startswith("sm1") or len(address) != 48:
-        print(f"Invalid prefix or length. Prefix: {address[:3]}, Length: {len(address)}")
+    # Check if the address starts with the correct prefix and has the correct length
+    if not address.startswith(NETWORK_CONFIG['ADDRESS_PREFIX']) or len(address) != NETWORK_CONFIG['ADDRESS_LENGTH']:
+        print(f"Invalid prefix or length. Prefix: {address[:len(NETWORK_CONFIG['ADDRESS_PREFIX'])]}, Length: {len(address)}")
         return False
     print("Prefix and length check passed")
 
@@ -14,8 +17,8 @@ def validate_spacemesh_address(address):
     hrp, data = bech32_decode(address)
     print(f"Decoded HRP: {hrp}, Data length: {len(data) if data else 'None'}")
     
-    # Check if the human-readable part is "sm"
-    if hrp != "sm":
+    # Check if the human-readable part matches the network configuration
+    if hrp != NETWORK_CONFIG['HRP']:
         print(f"Invalid HRP: {hrp}")
         return False
     print("HRP check passed")
@@ -41,5 +44,13 @@ def validate_spacemesh_address(address):
     return True
 
 # Test the function
-test_address = "sm1qqqqqqyzahon8xq784hgn7nvr6dtdxf76aaatumgnefc0q"
-print(f"Is valid: {validate_spacemesh_address(test_address)}")
+if __name__ == "__main__":
+    # Test addresses
+    mainnet_address = "sm1qqqqqq8qpyc9eyu35dy09qlehf5snt276pl6cach4crhj"
+    testnet_address = "stest1qqqqqqr3hwge8q0nkzs2xn3wcm0y8kxcnpytu3sxj2rjtz"
+
+    print("Testing mainnet address:")
+    print(f"Is valid: {validate_spacemesh_address(mainnet_address)}\n")
+
+    print("Testing testnet address:")
+    print(f"Is valid: {validate_spacemesh_address(testnet_address)}")
