@@ -21,7 +21,7 @@ class Registration(commands.Cog):
         wallet_address = message_parts[1] if len(message_parts) > 1 else None
 
         if wallet_address and not validate_spacemesh_address(wallet_address):
-            await ctx.send(f"Invalid Spacemesh {NETWORK_CONFIG['HRP'].upper()} address provided. Please check and try again.", ephemeral=True)
+            await ctx.send(f"Invalid Spacemesh {NETWORK_CONFIG['HRP'].upper()} address provided. Please check and try again.")
             return
 
         print(f"Fetching user data for user_id: {user_id}")
@@ -36,21 +36,21 @@ class Registration(commands.Cog):
             await insert_new_user(user_id, wallet_address or 'UNREGISTERED', deposit_address)
             
             if wallet_address:
-                await ctx.send(f"Registration successful! Your wallet address has been set to {wallet_address}. Your deposit address is: {deposit_address}", ephemeral=True)
+                await ctx.send(f"Registration successful! Your wallet address has been set to {wallet_address}. Your deposit address is: {deposit_address}")
             else:
-                await ctx.send(f"Registration successful! Your deposit address is: {deposit_address}\nPlease use !register <wallet_address> to set your withdrawal wallet when you're ready.", ephemeral=True)
+                await ctx.send(f"Registration successful! Your deposit address is: {deposit_address}\nPlease use !register <wallet_address> to set your withdrawal wallet when you're ready.")
         else:
             # Existing user logic
             if not wallet_address:
-                await ctx.send(f"You're already registered. Your current wallet address is: {user_data[1]}\nYour deposit address is: {user_data[2]}", ephemeral=True)
+                await ctx.send(f"You're already registered. Your current wallet address is: {user_data[1]}\nYour deposit address is: {user_data[2]}")
             elif user_data[1] == 'UNREGISTERED':
                 await update_user_wallet(user_id, wallet_address)
-                await ctx.send(f"Your wallet has been updated to: {wallet_address}", ephemeral=True)
+                await ctx.send(f"Your wallet has been updated to: {wallet_address}")
             elif user_data[1] != wallet_address:
                 # Implement wallet update confirmation here
-                await ctx.send("Wallet update functionality is not implemented yet.", ephemeral=True)
+                await ctx.send("Wallet update functionality is not implemented yet.")
             else:
-                await ctx.send(f"You're already registered with this wallet: {wallet_address}", ephemeral=True)
+                await ctx.send(f"You're already registered with this wallet: {wallet_address}")
 
         print(f"Inserting new user: {user_id}, {wallet_address or 'UNREGISTERED'}, {deposit_address}")
         await insert_new_user(user_id, wallet_address or 'UNREGISTERED', deposit_address)
