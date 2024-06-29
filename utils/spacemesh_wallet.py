@@ -2,9 +2,10 @@ import hashlib
 import binascii
 import blake3
 from bech32 import bech32_encode, convertbits
-from config import NETWORK_CONFIG
+from config import NETWORK_CONFIG, BOT_PUBKEY
+import base58
 
-def blake3_hash(self, data):
+def blake3_hash(data):
     return blake3.blake3(data).digest()
 
 def compute_address(public_key):
@@ -27,39 +28,31 @@ def bech32_encode_address(address, hrp=NETWORK_CONFIG['HRP']):
     converted = convertbits(address, 8, 5)
     return bech32_encode(hrp, converted)
 
-def spawn_wallet_address(public_key_hex):
-    """Spawn a wallet address from a hex-encoded ED25519 public key"""
+def spawn_wallet_address():
+    """Generate a Spacemesh address from the bot's public key"""
     try:
-        # Convert hex string to bytes
-        public_key = binascii.unhexlify(public_key_hex)
+        # Decode the bot's public key from base58
+        public_key_bytes = base58.b58decode(BOT_PUBKEY)
         
         # Ensure the public key is 32 bytes
-        if len(public_key) != 32:
+        if len(public_key_bytes) != 32:
             raise ValueError("Public key must be 32 bytes long")
         
         # Compute raw address
-        raw_address = compute_address(public_key)
+        raw_address = compute_address(public_key_bytes)
         
         # Encode to bech32
         bech32_address = bech32_encode_address(raw_address)
         
-        return {
-            "raw_address": binascii.hexlify(raw_address).decode(),
-            "bech32_address": bech32_address
-        }
+        return bech32_address
     except ValueError as e:
-        return {"error": str(e)}
+        return f"Error: {str(e)}"
     except binascii.Error:
-        return {"error": "Invalid hex string for public key"}
+        return "Error: Invalid public key format"
+    except Exception as e:
+        return f"Error: An unexpected error occurred - {str(e)}"
 
-# Example usage
+# Test function
 if __name__ == "__main__":
-    # Example public key (replace with actual public key)
-    public_key = "8e935bb7da33de54f58586bf2410425847b9281725fe1698be2433df3999cd01"
-    
-    result = spawn_wallet_address(public_key)
-    if "error" in result:
-        print(f"Error: {result['error']}")
-    else:
-        print(f"Raw address: {result['raw_address']}")
-        print(f"Bech32 address: {result['bech32_address']}")
+    address = spawn_wallet_address()
+    print(f"Generated Spacemesh address: {address}")
