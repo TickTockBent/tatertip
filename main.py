@@ -4,6 +4,7 @@ import signal
 from discord.ext import commands
 from config import BOT_TOKEN, DB_FILE, MIN_TIP_AMOUNT, MAX_TIP_AMOUNT
 from utils.database import init_db
+from config import USE_TESTNET
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,6 +17,7 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     print(f'Bot is in {len(bot.guilds)} guilds')
     print(f'Command prefix is: {bot.command_prefix}')
+    print(f"Running on {'TESTNET' if USE_TESTNET else 'MAINNET'}")
     await init_db()
 
 async def on_command_error(ctx, error):
