@@ -11,7 +11,6 @@ class Registration(commands.Cog):
 
     @commands.command(name='register')
     async def register(self, ctx, wallet_address: str = None):
-        print("Register command called")
         user_id = str(ctx.author.id)
         
         if wallet_address and not validate_spacemesh_address(wallet_address):
