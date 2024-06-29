@@ -8,6 +8,7 @@ MAX_TIP_AMOUNT = 1000  # Maximum tip amount
 BOT_USER_ID = '1255272020476821535'
 BOT_WALLET = 'stest1qqqqqqrvzt4wnvwumhxalcukr8v2tp0sfnym0rshcqkxt'
 BOT_PUBKEY = 'Chs2pYW1Awr29xSN2uD4Vm8q1mTmp3v8oJiAMevthML7'
+API_ENDPOINT = '192.168.86.41:9092'
 
 # Network configuration
 USE_TESTNET = True  # Set to False for mainnet
