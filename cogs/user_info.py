@@ -3,6 +3,7 @@ from discord.ext import commands
 from utils.db_utils import get_db_connection
 from utils.database import get_user_data
 from utils.address_validator import validate_spacemesh_address
+from config import NETWORK_CONFIG, USE_TESTNET
 
 class UserInfo(commands.Cog):
     def __init__(self, bot):
@@ -61,18 +62,18 @@ class UserInfo(commands.Cog):
 
     @commands.command(name='help')
     async def help_command(self, ctx):
-        help_text = """
-        **TaterTipBot Commands:**
+        network = "testnet" if USE_TESTNET else "mainnet"
+        help_text = f"""
+        **TaterTipBot Commands ({network.upper()}):**
 
-        - `!register <wallet_address>` - Register your wallet address with the bot.
+        - `!register <wallet_address>` - Register your {NETWORK_CONFIG['HRP'].upper()} wallet address with the bot.
         - `!balance` - Check your current balance and deposit address.
         - `!deposit` - Show your deposit address.
         - `!wallet` - Show your registered withdrawal wallet.
-        - `!tip @user <amount>` - Tip another user. Amount must be between {min_tip} and {max_tip} SMH.
+        - `!tip @user <amount>` - Tip another user. Amount must be between {self.bot.min_tip} and {self.bot.max_tip} SMH.
 
         For any issues or questions, please contact an admin.
-        """.format(min_tip=self.bot.min_tip, max_tip=self.bot.max_tip)
-
+        """
         await ctx.send(help_text, ephemeral=True)
 
     @help_command.error
