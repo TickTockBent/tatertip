@@ -8,6 +8,9 @@ from config import ADMIN_IDS, BOT_USER_ID
 from utils.database import get_user_data, update_user_balance, log_action
 from utils.db_utils import get_db_connection
 from utils.spacemesh_wallet import spawn_wallet_address
+from utils.address_validator import validate_spacemesh_address
+from utils.spacemesh_api import send_transaction
+from spacemesh.v1 import types_pb2
 
 def is_admin():
     async def predicate(ctx):
@@ -154,6 +157,32 @@ class Admin(commands.Cog):
         else:
             await ctx.send(f"An error occurred: {str(error)}")
             print(f"Error in get_deposit_address command: {error}")
+
+    @commands.command(name='sendtx')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
+    async def send_transaction_command(self, ctx, recipient: str, amount: float):
+        if not validate_spacemesh_address(recipient):
+            await ctx.send(f"Invalid Spacemesh address: {recipient}")
+            return
+
+        amount_smidge = int(amount * 1e9)  # Convert SMH to smidge
+
+        response = send_transaction(recipient, amount_smidge)
+
+        if response and response.txstate.state == types_pb2.TransactionState.TRANSACTION_STATE_MEMPOOL:
+            await ctx.send(f"Transaction sent successfully. TX ID: {binascii.hexlify(response.txstate.id.id).decode()}")
+        else:
+            await ctx.send("Failed to send transaction. Check logs for details.")
+
+    @send_transaction_command.error
+    async def send_transaction_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You don't have permission to use this command.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Invalid arguments. Usage: !sendtx <recipient_address> <amount>")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
+            print(f"Error in send_transaction command: {error}")
 
 async def setup(bot):
     print("Attempting to add Admin cog")
