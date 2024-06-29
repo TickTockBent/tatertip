@@ -5,7 +5,7 @@ def validate_spacemesh_address(address):
     print(f"Validating address: {address}")
     
     # Check if the address starts with "sm1" and has the correct length
-    if not address.startswith("sm1") or len(address) != 43:
+    if not address.startswith("sm1") or len(address) != 48:
         print(f"Invalid prefix or length. Prefix: {address[:3]}, Length: {len(address)}")
         return False
     print("Prefix and length check passed")
