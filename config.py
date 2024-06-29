@@ -6,7 +6,8 @@ DB_FILE = 'user_data.db'
 MIN_TIP_AMOUNT = 0.1  # Minimum tip amount
 MAX_TIP_AMOUNT = 1000  # Maximum tip amount
 BOT_USER_ID = '1255272020476821535'
-BOT_WALLET = 'sm1qqqqqq8qpyc9eyu35dy09qlehf5snt276pl6cach4crhj'
+BOT_WALLET = 'stest1qqqqqqrvzt4wnvwumhxalcukr8v2tp0sfnym0rshcqkxt'
+BOT_PUBKEY = 'Chs2pYW1Awr29xSN2uD4Vm8q1mTmp3v8oJiAMevthML7'
 
 # Network configuration
 USE_TESTNET = True  # Set to False for mainnet
