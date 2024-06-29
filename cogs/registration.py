@@ -31,9 +31,10 @@ class Registration(commands.Cog):
         if not user_data:
             # New user registration
             print("About to spawn wallet address")
-            deposit_address = spawn_wallet_address()
+            discord_id = ctx.author.id
+            deposit_address = spawn_wallet_address(discord_id)
             print(f"Spawned deposit address: {deposit_address}")
-            await insert_new_user(user_id, wallet_address or 'UNREGISTERED', deposit_address)
+            await insert_new_user(str(discord_id), wallet_address or 'UNREGISTERED', deposit_address)
             
             if wallet_address:
                 await ctx.send(f"Registration successful! Your wallet address has been set to {wallet_address}. Your deposit address is: {deposit_address}")
