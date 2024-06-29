@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from utils.db_utils import get_db_connection
 from utils.database import get_user_data, update_user_wallet, insert_new_user, log_action
-from utils.address_validator import generate_spacemesh_address, validate_spacemesh_address
+from utils.spacemesh_wallet import spawn_wallet_address
+from utils.address_validator import validate_spacemesh_address
 
 class Registration(commands.Cog):
     def __init__(self, bot):
@@ -21,7 +22,7 @@ class Registration(commands.Cog):
         
         if not user_data:
             # New user registration
-            deposit_address = generate_spacemesh_address()
+            deposit_address = spawn_wallet_address()
             await insert_new_user(user_id, wallet_address or 'UNREGISTERED', deposit_address)
             await ctx.send(f"Registration successful! Your deposit address is: {deposit_address}", ephemeral=True)
         else:
