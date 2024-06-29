@@ -2,6 +2,7 @@ import hashlib
 import binascii
 import blake3
 from bech32 import bech32_encode, convertbits
+from config import NETWORK_CONFIG
 
 def blake3_hash(self, data):
     return blake3.blake3(data).digest()
@@ -21,7 +22,7 @@ def compute_address(public_key):
     
     return address
 
-def bech32_encode_address(address, hrp="sm"):
+def bech32_encode_address(address, hrp=NETWORK_CONFIG['HRP']):
     """Encode address to bech32 format"""
     converted = convertbits(address, 8, 5)
     return bech32_encode(hrp, converted)
