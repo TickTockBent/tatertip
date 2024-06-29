@@ -13,7 +13,7 @@ def validate_spacemesh_address(address):
     if hrp != "sm":
         return False
 
-    # Convert the data from base32 to bytes
+    # Convert the data from base32 to 8-bit bytes
     decoded = convertbits(data, 5, 8, False)
     
     # Check if the conversion was successful and the result has the correct length
@@ -21,7 +21,7 @@ def validate_spacemesh_address(address):
         return False
 
     # Verify that the first 4 bytes are zero
-    if any(decoded[:4]):
+    if not all(b == 0 for b in decoded[:4]):
         return False
 
     # All checks passed, the address is valid
