@@ -7,6 +7,7 @@ from bech32 import bech32_encode, convertbits
 from config import ADMIN_IDS, BOT_USER_ID
 from utils.database import get_user_data, update_user_balance, log_action
 from utils.db_utils import get_db_connection
+from utils.spacemesh_wallet import spawn_wallet_address
 
 def is_admin():
     async def predicate(ctx):
@@ -134,7 +135,26 @@ class Admin(commands.Cog):
         else:
             await ctx.send(f"An error occurred: {str(error)}")
             print(f"Error in get_balance command: {error}")
-    
+
+    @commands.command(name='getdepositaddress')
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_IDS)
+    async def get_deposit_address(self, ctx, user: discord.User):
+        """Admin command to get the deposit address for a user"""
+        user_id = user.id
+        deposit_address = spawn_wallet_address(user_id)
+        
+        await ctx.send(f"Deposit address for user {user.name} (ID: {user_id}):\n`{deposit_address}`")
+
+    @get_deposit_address.error
+    async def get_deposit_address_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You don't have permission to use this command.")
+        elif isinstance(error, commands.UserNotFound):
+            await ctx.send("User not found. Please provide a valid user mention or ID.")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
+            print(f"Error in get_deposit_address command: {error}")
+
 async def setup(bot):
     print("Attempting to add Admin cog")
     await bot.add_cog(Admin(bot))
