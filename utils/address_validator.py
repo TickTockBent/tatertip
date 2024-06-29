@@ -26,3 +26,7 @@ def validate_spacemesh_address(address):
 
     # All checks passed, the address is valid
     return True
+
+# Test the function
+test_address = "sm1qqqqqqyzahon8xq784hgn7nvr6dtdxf76aaatumgnefc0q"
+print(f"Is valid: {validate_spacemesh_address(test_address)}")
