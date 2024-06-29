@@ -13,6 +13,7 @@ class Registration(commands.Cog):
 
     @commands.command(name='register')
     async def register(self, ctx):
+        print(f"Register command received from user {ctx.author.id}")
         user_id = str(ctx.author.id)
         
         # Check if a wallet address was provided
@@ -23,11 +24,15 @@ class Registration(commands.Cog):
             await ctx.send(f"Invalid Spacemesh {NETWORK_CONFIG['HRP'].upper()} address provided. Please check and try again.", ephemeral=True)
             return
 
+        print(f"Fetching user data for user_id: {user_id}")
         user_data = await get_user_data(user_id)
+        print(f"User data retrieved: {user_data}")
         
         if not user_data:
             # New user registration
+            print("About to spawn wallet address")
             deposit_address = spawn_wallet_address()
+            print(f"Spawned deposit address: {deposit_address}")
             await insert_new_user(user_id, wallet_address or 'UNREGISTERED', deposit_address)
             
             if wallet_address:
@@ -47,7 +52,9 @@ class Registration(commands.Cog):
             else:
                 await ctx.send(f"You're already registered with this wallet: {wallet_address}", ephemeral=True)
 
-        await log_action('REGISTER', user_id, f'Wallet: {wallet_address or "UNREGISTERED"}')
+        print(f"Inserting new user: {user_id}, {wallet_address or 'UNREGISTERED'}, {deposit_address}")
+        await insert_new_user(user_id, wallet_address or 'UNREGISTERED', deposit_address)
+        print("New user inserted successfully")
 
 async def setup(bot):
     print("Attempting to add Registration cog")
