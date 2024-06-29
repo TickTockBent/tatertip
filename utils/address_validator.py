@@ -14,7 +14,7 @@ def validate_spacemesh_address(address):
         return False
 
     # Convert the data from base32 to 8-bit bytes
-    decoded = convertbits(data, 5, 8, False)
+    decoded = convertbits(data, 5, 8, pad=False)
     
     # Check if the conversion was successful and the result has the correct length
     if decoded is None or len(decoded) != 24:
