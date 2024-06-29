@@ -4,6 +4,7 @@ from utils.db_utils import get_db_connection
 from utils.database import get_user_data, update_user_wallet, insert_new_user, log_action
 from utils.spacemesh_wallet import spawn_wallet_address
 from utils.address_validator import validate_spacemesh_address
+from config import NETWORK_CONFIG
 
 class Registration(commands.Cog):
     def __init__(self, bot):
@@ -15,7 +16,7 @@ class Registration(commands.Cog):
         user_id = str(ctx.author.id)
         
         if wallet_address and not validate_spacemesh_address(wallet_address):
-            await ctx.send("Invalid Spacemesh address provided. Please check and try again.", ephemeral=True)
+            await ctx.send(f"Invalid Spacemesh {NETWORK_CONFIG['HRP'].upper()} address provided. Please check and try again.", ephemeral=True)
             return
 
         user_data = await get_user_data(user_id)
