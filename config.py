@@ -1,13 +1,13 @@
 # config.py
 
-BOT_TOKEN = 'MTI1NTI3MjAyMDQ3NjgyMTUzNQ.GkVw5g.7xI6KrQtdkfhP2xAdCVcU75CdrGc_4ML-WACXU'
+BOT_TOKEN = '-redacted-'
 ADMIN_IDS = [170855291636809728]  # List of admin user IDs
 DB_FILE = 'user_data.db'
 MIN_TIP_AMOUNT = 0.1  # Minimum tip amount
 MAX_TIP_AMOUNT = 1000  # Maximum tip amount
 BOT_USER_ID = '1255272020476821535'
-BOT_WALLET = 'stest1qqqqqqrvzt4wnvwumhxalcukr8v2tp0sfnym0rshcqkxt'
-BOT_PUBKEY = 'Chs2pYW1Awr29xSN2uD4Vm8q1mTmp3v8oJiAMevthML7'
+BOT_WALLET = '-redacted-'
+BOT_PUBKEY = '-redacted-'
 API_ENDPOINT = '192.168.86.41:9092'
 
 # Network configuration
